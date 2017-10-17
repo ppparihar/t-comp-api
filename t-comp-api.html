@@ -1,0 +1,212 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<dom-module id="t-comp-api">
+  <template>
+    <iron-ajax id="ajax" url="[[url]]" handle-as="json" last-response="{{ajaxResponse}}" on-response="_onApiRespone"></iron-ajax>
+  </template>
+
+  <script>
+    class TCompApi extends Polymer.Element {
+      static get is() {
+        return 't-comp-api';
+      }
+
+      static get properties() {
+        return {
+          url: String,
+          request: {
+            type: Object,
+            observer: '_onRequestChanged'
+          },
+          response: {
+            type: Object,
+            notify: true
+          },
+          method: {
+            type: String,
+            value: "POST"
+          },
+          eventPrefix: {
+            type: String,
+            value: ""
+          },
+          autoTrigger: {
+            type: Boolean,
+            value: false
+          },
+
+          ajaxRequestFn: {
+            type: Function,
+            value: null,
+          },
+          responseDataFn: {
+            type: Function,
+            value: null,
+          },
+          errorDataFn: {
+            type: Function,
+            value: null,
+          },
+          validateRequestFn: {
+            type: Function,
+            value: null,
+          },
+          validateResponseFn: {
+            type: Function,
+            value: null
+          }
+        }
+      }
+
+      triggerAjax() {
+        if (!this.validateRequest()) {
+          return;
+        }
+
+        let ajax = this.$.ajax;
+        ajax.body = this.ajaxRequest;
+        ajax.method = this.method;
+        ajax.contentType = "application/json";
+        ajax.generateRequest();
+
+        this._dispatchApiStartEvent();
+      }
+
+      validateRequest() {
+        let invalideState;
+        if (this.validateRequestFn && typeof this.validateRequestFn === 'function') {
+          invalideState = this.validateRequestFn(this.request);
+        } else {
+          invalideState = this._isValidRequest;
+        }
+
+        if (invalideState) {
+          this._dispatchApiValidationEvent(invalideState);
+          return false;
+        }
+        return true;
+      }
+
+      get isResponseSucessfull() {
+        if (this.validateResponseFn && typeof this.validateResponseFn === 'function') {
+          return this.validateResponseFn(this.ajaxResponse);
+        }
+        return this._isResponseSucessfull;
+      }
+
+      get ajaxRequest() {
+        if (this.ajaxRequestFn && typeof this.ajaxRequestFn === 'function') {
+          return this.ajaxRequestFn(this.request);
+        }
+        return this._ajaxRequest;
+      }
+
+      get responseData() {
+        if (this.responseDataFn && typeof this.responseDataFn === 'function') {
+          return this.responseDataFn(this.ajaxResponse);
+        }
+        return this._responseData;
+      }
+
+      get errorData() {
+        if (this.errorDataFn && typeof this.errorDataFn === 'function') {
+          return this.errorDataFn(this.ajaxResponse);
+        }
+        return this._errorData;
+      }
+
+
+
+      _onRequestChanged() {
+        if (this.autoTrigger) {
+          this.triggerAjax();
+        }
+
+      }
+
+      _onApiRespone(e) {
+
+        this.response = this.responseData;
+
+        if (this.isResponseSucessfull) {
+          this.dispatchEvent(new CustomEvent(`${this._prefix}success`, {
+            detail: this.response,
+            bubbles: true,
+            composed: true
+          }));
+
+        } else {
+          this.dispatchEvent(new CustomEvent(`${this._prefix}error`, {
+            detail: {
+              data: this.errorData
+            },
+            bubbles: true,
+            composed: true
+          }));
+        }
+
+        this._dispatchApiCompleteEvent();
+      }
+
+      _dispatchApiStartEvent() {
+
+        this.dispatchEvent(new CustomEvent(`${this._prefix}start`, {
+          detail: {
+            request: this.request
+          },
+          bubbles: true,
+          composed: true
+        }));
+      }
+
+      _dispatchApiCompleteEvent() {
+
+        this.dispatchEvent(new CustomEvent(`${this._prefix}complete`, {
+          detail: {
+            request: this.request,
+            response: this.response
+          },
+          bubbles: true,
+          composed: true
+        }));
+      }
+
+      _dispatchApiValidationEvent(invalideState) {
+        this.dispatchEvent(new CustomEvent(`${this._prefix}validate`, {
+          detail: invalideState,
+          bubbles: true,
+          composed: true
+        }));
+      }
+
+      get _isResponseSucessfull() {
+        return this.ajaxResponse && this.ajaxResponse.status && this.ajaxResponse.status.isSuccessful;
+      }
+
+      get _ajaxRequest() {
+        return this.request;
+      }
+
+      get _responseData() {
+        return this.ajaxResponse;
+      }
+
+      get _errorData() {
+        return this.ajaxResponse.status;
+      }
+
+      get _isValidRequest() {
+        let invalideState = null;
+        return invalideState;
+      }
+
+      get _prefix() {
+        return this.eventPrefix ? `${this.eventPrefix}-api-` : 'api-';
+      }
+
+    }
+
+    window.customElements.define(TCompApi.is, TCompApi);
+  </script>
+</dom-module>
