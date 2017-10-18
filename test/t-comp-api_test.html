@@ -20,12 +20,12 @@
       <t-comp-api url="/responds_to_post_with_json"></t-comp-api>
     </template>
   </test-fixture>
-  <test-fixture id="AjaxwithGetTestFixture">
+  <test-fixture id="TCompApiGetFixture">
     <template>
       <t-comp-api url="/responds_to_get_with_json" method="GET"></t-comp-api>
     </template>
   </test-fixture>
-  <test-fixture id="AutotriggerTestFixture">
+  <test-fixture id="AutotriggerFixture">
     <template>
       <t-comp-api url="/responds_to_post_with_json" auto-trigger></t-comp-api>
     </template>
@@ -48,7 +48,8 @@
       };
       let responseData = {
         success: '{"status":{"isSuccessful":true},"data":"test data"}',
-        error: '{"status":{"isSuccessful":false,"message":"error message"}}'
+        error: '{"status":{"isSuccessful":false,"message":"error message"}}',
+        error504: '{"message": "Endpoint request timed out"}'
       }
       let requestObj = {
         "data": "test Data"
@@ -72,6 +73,22 @@
           ]
         );
         server.respondWith(
+          'POST',
+          '/responds_to_post_with_504_error_json', [
+            504,
+            responseHeaders.json,
+            responseData.error504
+          ]
+        );
+        server.respondWith(
+          'POST',
+          '/responds_to_post_with_404_error_json', [
+            404,
+            responseHeaders.json,
+            ''
+          ]
+        );
+        server.respondWith(
           'GET',
           '/responds_to_get_with_json', [
             200,
@@ -79,6 +96,9 @@
             responseData.success
           ]
         );
+
+        tCompApi = fixture('TCompApiFixture');
+        tCompApi.request = requestObj;
       });
 
       teardown(() => {
@@ -86,13 +106,12 @@
       });
 
       test('instantiating the element works', () => {
-        tCompApi = fixture('TCompApiFixture');
+     
         expect(tCompApi).to.be.ok;
       });
 
       test('trigger Ajax works', () => {
-        tCompApi = fixture('TCompApiFixture');
-        tCompApi.request = requestObj;
+       
         tCompApi.triggerAjax();
         server.respond();
         expect(server.requests[0]).to.be.ok;
@@ -101,7 +120,7 @@
       })
 
       test('auto trigger works', () => {
-        tCompApi = fixture('AutotriggerTestFixture');
+        tCompApi = fixture('AutotriggerFixture');
         tCompApi.request = requestObj;
         server.respond();
         expect(server.requests[0]).to.be.ok;
@@ -110,7 +129,7 @@
       })
 
       test('trigger Ajax with get method works', (done) => {
-        tCompApi = fixture('AjaxwithGetTestFixture');
+        tCompApi = fixture('TCompApiGetFixture');
         tCompApi.triggerAjax();
         server.respond();
 
@@ -130,8 +149,6 @@
           sucessHandler = sinon.spy();
           errorHandler = sinon.spy();
           completeHandler = sinon.spy();
-
-          tCompApi = fixture('TCompApiFixture');
 
           tCompApi.addEventListener('api-start', startHandler);
           tCompApi.addEventListener('api-success', sucessHandler);
@@ -173,10 +190,6 @@
 
       suite('when override methods', () => {
 
-        setup(() => {
-          tCompApi = fixture('TCompApiFixture');
-          tCompApi.request = requestObj;
-        })
         test('ajaxRequestFn is called correctly', () => {
 
           let modifiedData = "modified data";
@@ -229,7 +242,7 @@
           let modifiedResponse = {
             "isSuccessful": false,
             "message": "modified error message"
-          }         
+          }
 
           let errorDataFn = sinon.spy((response) => {
             response.status.message = "modified error message";
@@ -280,7 +293,7 @@
           let validateResponseFn = sinon.spy(function (arg) {
             return true;
           });
-          
+
           tCompApi.validateResponseFn = validateResponseFn;
 
           tCompApi.triggerAjax();
@@ -343,6 +356,36 @@
 
         })
       })
+
+      suite('when error occure with AJAX call', () => {       
+        test('picking error from response works', (done) => {
+          tCompApi.url = '/responds_to_post_with_504_error_json';
+          tCompApi.addEventListener('api-error', errorHandler);
+          tCompApi.triggerAjax();
+          server.respond();
+
+          function errorHandler(e){
+            expect(e.detail.data).to.be.ok;
+            expect(e.detail.data).to.deep.equal(JSON.parse(responseData.error504));
+            done();
+          }
+          
+        })
+        test('picking error from errorMessage works', (done) => {
+          tCompApi.url = '/responds_to_post_with_404_error_json';
+          tCompApi.addEventListener('api-error', errorHandler);
+          tCompApi.triggerAjax();
+          server.respond();
+
+          function errorHandler(e){
+            expect(e.detail.data).to.be.ok;
+            expect(e.detail.data).to.be.equal("The request failed with status code: 404");
+            done();
+          }
+          
+        })
+      })
+
     });
   </script>
 
