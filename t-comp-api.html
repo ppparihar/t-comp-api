@@ -3,7 +3,7 @@
 
 <dom-module id="t-comp-api">
   <template>
-    <iron-ajax id="ajax" url="[[url]]" handle-as="json" last-response="{{ajaxResponse}}" on-response="_onApiRespone"></iron-ajax>
+    <iron-ajax id="ajax" url="[[url]]" handle-as="json" last-response="{{ajaxResponse}}" on-response="_onApiRespone" on-error="_onApiErrorResponse"></iron-ajax>
   </template>
 
   <script>
@@ -34,6 +34,10 @@
           autoTrigger: {
             type: Boolean,
             value: false
+          },
+          bubbles: {
+            type: Boolean,
+            value: false,
           },
 
           ajaxRequestFn: {
@@ -78,7 +82,7 @@
         if (this.validateRequestFn && typeof this.validateRequestFn === 'function') {
           invalideState = this.validateRequestFn(this.request);
         } else {
-          invalideState = this._isValidRequest;
+          invalideState = this._validateRequest;
         }
 
         if (invalideState) {
@@ -132,21 +136,26 @@
         if (this.isResponseSucessfull) {
           this.dispatchEvent(new CustomEvent(`${this._prefix}success`, {
             detail: this.response,
-            bubbles: true,
+            bubbles: this.bubbles,
             composed: true
           }));
 
         } else {
-          this.dispatchEvent(new CustomEvent(`${this._prefix}error`, {
-            detail: {
-              data: this.errorData
-            },
-            bubbles: true,
-            composed: true
-          }));
+          this._dispatchApiErrorEvent(this.errorData);
         }
 
         this._dispatchApiCompleteEvent();
+      }
+      _onApiErrorResponse(e) {
+        let error = "An unknown error occurred";
+        if (e.detail) {
+          if (e.detail.request && e.detail.request.xhr && e.detail.request.xhr.response) {
+            error = e.detail.request.xhr.response;
+          } else if (e.detail.error && e.detail.error.message) {
+            error = e.detail.error.message;
+          }
+        }
+        this._dispatchApiErrorEvent(error);
       }
 
       _dispatchApiStartEvent() {
@@ -155,7 +164,7 @@
           detail: {
             request: this.request
           },
-          bubbles: true,
+          bubbles: this.bubbles,
           composed: true
         }));
       }
@@ -167,7 +176,7 @@
             request: this.request,
             response: this.response
           },
-          bubbles: true,
+          bubbles: this.bubbles,
           composed: true
         }));
       }
@@ -175,10 +184,22 @@
       _dispatchApiValidationEvent(invalideState) {
         this.dispatchEvent(new CustomEvent(`${this._prefix}validate`, {
           detail: invalideState,
-          bubbles: true,
+          bubbles: this.bubbles,
           composed: true
         }));
       }
+
+      _dispatchApiErrorEvent(error) {
+
+        this.dispatchEvent(new CustomEvent(`${this._prefix}error`, {
+          detail: {
+            data:error
+          },
+          bubbles: this.bubbles,
+          composed: true
+        }));
+      }
+
 
       get _isResponseSucessfull() {
         return this.ajaxResponse && this.ajaxResponse.status && this.ajaxResponse.status.isSuccessful;
@@ -196,7 +217,7 @@
         return this.ajaxResponse.status;
       }
 
-      get _isValidRequest() {
+      get _validateReque() {
         let invalideState = null;
         return invalideState;
       }
