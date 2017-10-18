@@ -1,7 +1,7 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
 
-<dom-module id="t-comp-api">
+<dom-module id="t-component-api">
   <template>
     <iron-ajax id="ajax" url="[[url]]" handle-as="json" last-response="{{ajaxResponse}}" on-response="_onApiRespone" on-error="_onApiErrorResponse"></iron-ajax>
   </template>
@@ -9,7 +9,7 @@
   <script>
     class TCompApi extends Polymer.Element {
       static get is() {
-        return 't-comp-api';
+        return 't-component-api';
       }
 
       static get properties() {

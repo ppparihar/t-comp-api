@@ -10,35 +10,35 @@
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
 
-  <link rel="import" href="../t-comp-api.html">
+  <link rel="import" href="../t-component-api.html">
 </head>
 
 <body>
 
   <test-fixture id="TCompApiFixture">
     <template>
-      <t-comp-api url="/responds_to_post_with_json"></t-comp-api>
+      <t-component-api url="/responds_to_post_with_json"></t-component-api>
     </template>
   </test-fixture>
   <test-fixture id="TCompApiGetFixture">
     <template>
-      <t-comp-api url="/responds_to_get_with_json" method="GET"></t-comp-api>
+      <t-component-api url="/responds_to_get_with_json" method="GET"></t-component-api>
     </template>
   </test-fixture>
   <test-fixture id="AutotriggerFixture">
     <template>
-      <t-comp-api url="/responds_to_post_with_json" auto-trigger></t-comp-api>
+      <t-component-api url="/responds_to_post_with_json" auto-trigger></t-component-api>
     </template>
   </test-fixture>
   <test-fixture id="EventPrefixFixture">
     <template>
-      <t-comp-api url="/responds_to_post_with_json" event-prefix="my-prefix"></t-comp-api>
+      <t-component-api url="/responds_to_post_with_json" event-prefix="my-prefix"></t-component-api>
     </template>
   </test-fixture>
 
 
   <script>
-    suite('<t-comp-api>', () => {
+    suite('<t-component-api>', () => {
       let server;
       let tCompApi;
       let responseHeaders = {

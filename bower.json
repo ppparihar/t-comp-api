@@ -1,6 +1,6 @@
 {
-  "name": "t-comp-api",
-  "main": "t-comp-api.html",
+  "name": "t-component-api",
+  "main": "t-component-api.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "iron-ajax": "PolymerElements/iron-ajax#^2.0.5"

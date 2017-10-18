@@ -4,7 +4,7 @@ module.exports = {
         dir: "./test/coverage-report",
         reporters: ["text-summary", "lcov"],
         include: [
-          "/t-comp-api/t-comp-api.html"
+          "/t-component-api/t-component-api.html"
         ],
         exclude: [
           "/polymer/polymer.js",
