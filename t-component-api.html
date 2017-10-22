@@ -7,7 +7,7 @@
   </template>
 
   <script>
-    class TCompApi extends Polymer.Element {
+    class TComponentApi extends Polymer.Element {
       static get is() {
         return 't-component-api';
       }
@@ -193,7 +193,7 @@
 
         this.dispatchEvent(new CustomEvent(`${this._prefix}error`, {
           detail: {
-            data:error
+            data: error
           },
           bubbles: this.bubbles,
           composed: true
@@ -214,7 +214,11 @@
       }
 
       get _errorData() {
-        return this.ajaxResponse.status;
+        let error = "Internal error occured";
+        if (this.ajaxResponse && this.ajaxResponse.status && this.ajaxResponse.status.message) {
+          error = this.ajaxResponse.status.message;
+        }
+        return error;
       }
 
       get _validateRequest() {
@@ -228,6 +232,6 @@
 
     }
 
-    window.customElements.define(TCompApi.is, TCompApi);
+    window.customElements.define(TComponentApi.is, TComponentApi);
   </script>
 </dom-module>
